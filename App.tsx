@@ -1,118 +1,78 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+// In App.js in a new project
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {NavigationContainer, useNavigation} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {RootStackParamList} from './src/types/rootStackParam';
+import Reservation from './src/screens/Reservation';
+import BasicModal from './src/components/modals/BasicModal';
+import ModalBackground from './src/components/modals/ModalBackground';
+import HomeScreen from './src/screens/HomeScreen';
+import BottomTab from './src/screens/BottomTab';
+import GuideModal from './src/components/modals/GuideModal';
+import Intro from './src/screens/Intro';
+import BootSplash from 'react-native-bootsplash';
+import {IOS, deviceId} from './src/configs/device';
+import useLoginStore from './src/hooks/useLoginStore';
+import {reject} from 'lodash';
+import axios from 'axios';
+import {SERVER_URL} from './src/configs/server';
+import {AppState} from 'react-native';
+import useUserStateStore from './src/hooks/useUserStateStore';
+import PayModal from './src/components/modals/PayModal';
+import Loading from './src/components/modals/Loading';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+function App() {
+  const [ready, setReady] = useState(false);
+  const {login, setLogin} = useLoginStore(state => state);
+  const setChur = useUserStateStore(state => state.setChur);
+  const init = async () => {
+    // setLogin();
+    const res = await axios.get(SERVER_URL + 'users?' + 'deviceId=' + deviceId);
+    console.log('로그인 결과 : ', res.data.result);
+    setLogin(res.data.result);
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
-
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    if (res.data.result) {
+      setChur(res.data.user.chur);
+    }
+    setReady(true);
+    await BootSplash.hide({fade: true});
+    return res.data;
   };
 
+  useEffect(() => {
+    init();
+    const appState = AppState.addEventListener('change', AppStateStatus => {
+      if (AppStateStatus === 'active' && ready) {
+        // const loginState = init();
+        init();
+      }
+    });
+
+    return () => {
+      appState.remove();
+    };
+  }, []);
+
+  if (!ready) return <></>;
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{headerShown: false}}
+        initialRouteName={login ? 'BottomStack' : 'Intro'}>
+        <Stack.Screen name="Intro" component={Intro} />
+        <Stack.Screen name="BottomStack" component={BottomTab} />
+        <Stack.Screen name="Reservation" component={Reservation} />
+      </Stack.Navigator>
+      <ModalBackground />
+      <Loading />
+      <BasicModal />
+      <GuideModal />
+      <PayModal />
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
 export default App;

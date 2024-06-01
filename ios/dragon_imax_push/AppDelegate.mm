@@ -1,8 +1,13 @@
 #import "AppDelegate.h"
-
+#import  "RNBootSplash.h"
 #import <React/RCTBundleURLProvider.h>
 
 @implementation AppDelegate
+
+- ( void ) customRootView : (RCTRootView *) rootView {
+  [RNBootSplash initWithStoryboard: @"BootSplash"  rootView: rootView]; // ⬅️ 스플래시 화면 초기화
+}
+
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
