@@ -8,4 +8,7 @@ export type RootStackParamList = {
     postImg: string;
     subscription?: string[];
   };
+  HistoryDetail: {
+    _id: string;
+  };
 };

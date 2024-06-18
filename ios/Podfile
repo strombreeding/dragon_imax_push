@@ -1,22 +1,48 @@
 # Resolve react_native_pods.rb with node to allow for hoisting
-require Pod::Executable.execute_command('node', ['-p',
-  'require.resolve(
-    "react-native/scripts/react_native_pods.rb",
-    {paths: [process.argv[1]]},
-  )', __dir__]).strip
+#require Pod::Executable.execute_command('node', ['-p',
+#  'require.resolve(
+#    "react-native/scripts/react_native_pods.rb",
+#    {paths: [process.argv[1]]},
+#  )', __dir__]).strip
+
+def node_require(script)
+   # Resolve script with node to allow for hoisting
+  require Pod::Executable.execute_command('node', ['-p',
+     "require.resolve(
+       '#{script}',
+       {paths: [process.argv[1]]},
+     )", __dir__]).strip
+end
+
+node_require('react-native/scripts/react_native_pods.rb')
+node_require('react-native-permissions/scripts/setup.rb')
+
 
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
+
+setup_permissions([
+   'Notifications',
+])
+
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  use_frameworks! :linkage => linkage.to_sym
+#  use_frameworks! :linkage => linkage.to_sym
+  use_frameworks! :linkage => :static  # ㅎㅇㅎㅇ
+  $RNFirebaseAsStaticFramework = true  # ㅎㅇㅎㅇ
 end
+
+
 
 target 'dragon_imax_push' do
   config = use_native_modules!
 
+  pod 'FirebaseCore', :modular_headers => true # <- 여기 추가
+  pod 'GoogleUtilities', :modular_headers => true # <- 여기 추가
+    
+  
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.
@@ -37,4 +63,20 @@ target 'dragon_imax_push' do
       # :ccache_enabled => true
     )
   end
+  
+
+
+  
 end
+
+
+#
+#def node_require(script)
+## Resolve script with node to allow for hoisting
+#
+#  require Pod::Executable.execute_command('node', ['-p',"require.resolve('#{script}',{paths: [process.argv[1]]},)", __dir__]).strip
+#end
+#
+## Use it to require both react-native's and this package's scripts:
+#node_require('react-native/scripts/react_native_pods.rb')
+#node_require('react-native-permissions/scripts/setup.rb')

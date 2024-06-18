@@ -17,6 +17,11 @@ import {NavigationProps, RouteProps} from '../types/navigationProps';
 import {colors} from '../styles/color';
 import useUserStateStore from '../hooks/useUserStateStore';
 import {icon} from '../styles/icon';
+import PrevNextBtn from '../components/buttons/PrevNextBtn';
+import useLoadingStore from '../hooks/useLoadingStore';
+import useAdmobStore from '../hooks/useAdmonStore';
+import usePopupStore from '../hooks/usePopupStore';
+import Admob from '../components/admob/Admob';
 
 function Reservation() {
   // const {cinemaTypes, movieName, imgUrl} = route.params;
@@ -26,8 +31,37 @@ function Reservation() {
   const {cinemaTypes, movieName, postImg, subscription} =
     useRoute<RouteProps<'Reservation'>>().params;
   console.log(useRoute<RouteProps<'Reservation'>>().params);
-  const [cinemaType, setCinemaType] = useState([] as string[]);
+  const [cinemaType, setCinemaType] = useState(['IMAX'] as string[]);
   const modalStore = useModalStore(state => state);
+
+  const {hideLoading, showLoading, visible} = useLoadingStore(state => state);
+  const popupStore = usePopupStore(state => state);
+  const admobVisible = useAdmobStore(state => state.visible);
+  const show = useAdmobStore(state => state.show);
+  const admobPopup = () => {
+    if (admobVisible) {
+    } else {
+      popupStore.setPopupData({
+        content: `광고를 시청하고 
+[${movieName}]/[${cinemaType}] 을(를) 구독하세요!`,
+        leftText: '취소',
+        rightAction: () => {
+          show();
+          showLoading();
+        },
+        rightText: '시청',
+        title: '광고시청',
+        data: {
+          cinemaType,
+          deviceId: deviceId,
+          movieName,
+          payChur: pay,
+          postImg,
+        },
+      });
+      popupStore.showModal();
+    }
+  };
 
   useEffect(() => {
     BackHandler.addEventListener('hardwareBackPress', () => {
@@ -48,29 +82,32 @@ function Reservation() {
     if (chur - pay < 0) {
       return;
     }
-    modalStore.setTitle('스케쥴 추적');
-    modalStore.setContent(`
-영화 : ${movieName}
+    admobPopup();
 
-상영종류 : ${cinemaType}
+    //     modalStore.setTitle('구독');
+    //     modalStore.setContent(`
+    // 영화 : ${movieName}
 
-비용 : 츄르 ${pay}개
+    // 상영종류 : ${cinemaType}
 
-* 보유 중인 츄르 ${chur}개
+    // 비용 : 광고시청 1회
 
-          `);
-    modalStore.setData({
-      cinemaType,
-      deviceId: deviceId,
-      movieName,
-      payChur: chur - pay,
-      postImg,
-    });
-    modalStore.showModal();
+    //           `);
+    //     modalStore.setData({
+    //       cinemaType,
+    //       deviceId: deviceId,
+    //       movieName,
+    //       payChur: pay,
+    //       postImg,
+    //     });
+    //     modalStore.showModal();
   };
+  console.log(cinemaType);
 
   return (
     <SafeAreaViewCustom>
+      {admobVisible && <Admob />}
+
       <View
         style={{
           alignItems: 'center',
@@ -102,27 +139,7 @@ function Reservation() {
                 <Pressable
                   key={i}
                   onPress={() => {
-                    const currentList = [...cinemaType];
-                    if (currentList.includes(type.toUpperCase())) {
-                      currentList.splice(
-                        currentList.indexOf(type.toUpperCase()),
-                        1,
-                      );
-                      setCinemaType([...currentList]);
-                      if (type === 'imax') {
-                        setPay(pay - 5);
-                      } else {
-                        setPay(pay - 2);
-                      }
-                    } else {
-                      //등록
-                      setCinemaType([...currentList, type.toUpperCase()]);
-                      if (type === 'imax') {
-                        setPay(pay + 5);
-                      } else {
-                        setPay(pay + 2);
-                      }
-                    }
+                    setCinemaType([type.toUpperCase()]);
                   }}
                   style={[
                     cinemaType.includes(type.toUpperCase())
@@ -145,7 +162,7 @@ function Reservation() {
             })}
           </View>
         </View>
-        <View style={[styles.description]}>
+        {/* <View style={[styles.description]}>
           <View
             style={{
               flexDirection: 'row',
@@ -183,25 +200,18 @@ function Reservation() {
               <Text style={styles.churText}>{chur - pay}</Text>
             </View>
           )}
-        </View>
+        </View> */}
 
         <EmptyBox height={30} />
       </View>
 
-      <View style={styles.bottomView}>
-        <Pressable style={[styles.bottomLeftBtn]} onPress={goBack}>
-          <Text style={{color: 'white'}}>이전</Text>
-        </Pressable>
-        <EmptyBox width={30} />
-        <Pressable
-          style={[
-            styles.bottomRightBtn,
-            {opacity: cinemaType.length > 0 && chur - pay >= 0 ? 1 : 0.5},
-          ]}
-          onPress={setContent}>
-          <Text style={{color: 'white'}}>다음</Text>
-        </Pressable>
-      </View>
+      <PrevNextBtn
+        // condition={cinemaType.length > 0 && chur - pay >= 0}
+        condition={true}
+        leftText="이전"
+        rightAction={setContent}
+        rightText="다음"
+      />
     </SafeAreaViewCustom>
   );
 }
@@ -243,33 +253,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.Accent,
   },
-  bottomView: {
-    position: 'absolute',
-    bottom: IOS ? 44 : 25,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    height: 60,
-    marginTop: 15,
-    paddingHorizontal: 30,
-  },
-  bottomRightBtn: {
-    backgroundColor: colors.Accent,
-    width: 100,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-  },
-  bottomLeftBtn: {
-    backgroundColor: colors.Black,
-    width: 100,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: colors.White,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-  },
+
   churText: {fontSize: 20, fontWeight: '900', color: colors.White},
 });

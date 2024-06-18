@@ -4,8 +4,8 @@ interface MyObject {
 
 export function addFrontAndBack(arr: MyObject[]): MyObject[] | undefined {
   if (arr.length < 2) {
-    console.error('배열의 길이는 최소한 2보다 커야 합니다.');
-    return;
+    console.log('배열의 길이는 최소한 2보다 커야 합니다.', arr.length);
+    return arr;
   }
   const d = {...arr[arr.length - 1]};
   const c = {...arr[arr.length - 2]};

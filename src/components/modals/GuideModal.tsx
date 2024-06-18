@@ -35,26 +35,28 @@ function GuideModal() {
               padding: 25,
             }}>
             <Text style={{fontSize: 19, fontWeight: '500'}}>
-              1. [ 용산CGV ]를 모니터링하여 [ IMAX ]와 [ 4DX ]상영관의 업데이트
-              소식을 알려줍니다.
+              1. [ 용산CGV ]를 모니터링하여 {'\n'}[ IMAX ]와 [ 4DX ]상영관의
+              업데이트 소식을 알려줍니다.
               {'\n'}
             </Text>
             <Text style={{fontSize: 19, fontWeight: '500'}}>
               2. 정상적으로 기능이 작동할 수 있도록 [푸쉬알림]설정을 켜두세요.
               {'\n'}
-              <Text>*마이페이지에서 알림 테스트 가능</Text>
+              <Text style={{fontSize: 15}}>
+                *[홈][마이]탭 상당중앙에서 변경 가능
+              </Text>
               {'\n'}
             </Text>
             <Text style={{fontSize: 19, fontWeight: '500'}}>
-              3. 보냥의 정보를 맹신하여 발생하는 문제는 책임지지 않습니다.
+              3. [용아맥뚫었냥]의 정보를 맹신하시지는 마시길 바랍니다.
               {'\n'}
             </Text>
             <Text style={{fontSize: 19, fontWeight: '500'}}>
-              4. 추적에 필요한 츄르는 광고 시청으로 획득하실 수 있습니다.
+              4. 추적에 필요한 츄르는 상점탭에서 획득하실 수 있습니다.
               {'\n'}
             </Text>
             <Text style={{fontSize: 19, fontWeight: '500'}}>
-              그럼 보냥과 함께 성공적인 예매를 기원합니다!
+              그럼 [용아맥 뚫었냥]과 함께 성공적인 예매를 기원합니다!
               {'\n'}
             </Text>
           </View>

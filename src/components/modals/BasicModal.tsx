@@ -17,6 +17,9 @@ import {colors} from '../../styles/color';
 import axios from 'axios';
 import {SERVER_URL} from '../../configs/server';
 import useUserStateStore from '../../hooks/useUserStateStore';
+import usePopupStore from '../../hooks/usePopupStore';
+import useAdmobStore from '../../hooks/useAdmonStore';
+import useLoadingStore from '../../hooks/useLoadingStore';
 
 function BasicModal() {
   const navigation = useNavigation<any>();
@@ -24,25 +27,22 @@ function BasicModal() {
   const {visible, hideModal, content, title, data} = useModalStore(
     state => state,
   );
+
   const onPress = () => {
     hideModal();
   };
   const req = async () => {
-    hideModal();
+    console.log(data);
     try {
-      const res = await axios.post(SERVER_URL + 'subscriptions', {
-        cinemaType: data.cinemaType,
-        deviceId: data.deviceId,
-        movieName: data.movieName,
-        payChur: data.payChur,
-        postImg: data.postImg,
-      });
-      console.log(res.data);
+      const res = await axios.post(SERVER_URL + 'subscriptions', data);
+
       DeviceEventEmitter.emit('SubscriptionMovie');
       DeviceEventEmitter.emit('HistoryRefresh');
       setChur(data.payChur);
       navigation.navigate('BottomStack');
+      onPress();
     } catch (err) {
+      console.log(err);
       Alert.alert('오류', '오류가 발생했네요. 잠시 후 다시 시도해보세요.');
     }
   };
@@ -72,7 +72,7 @@ function BasicModal() {
             </Pressable>
             <EmptyBox width={50} />
             <Pressable style={styles.rightBtn} onPress={req}>
-              <Text style={{color: 'white'}}>추적</Text>
+              <Text style={{color: 'white'}}>시청</Text>
             </Pressable>
           </View>
         </View>
@@ -80,6 +80,8 @@ function BasicModal() {
     </Modal>
   );
 }
+
+export default BasicModal;
 
 const styles = StyleSheet.create({
   centeredView: {
@@ -111,5 +113,3 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
 });
-
-export default BasicModal;

@@ -25,11 +25,11 @@ function BottomTab() {
         component={History}
         options={screenOptions('history_30px')}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="상점"
         component={Store}
         options={screenOptions('store_30px')}
-      />
+      /> */}
       <Tab.Screen
         name="마이"
         component={Mypage}

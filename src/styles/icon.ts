@@ -9,5 +9,26 @@ export const icon = {
   chur_2: require('../assets/ico/chur_2.png'),
   chur_5: require('../assets/ico/chur_5.png'),
   chur_7: require('../assets/ico/chur_7.png'),
+  logo0: require('../assets/logo0.png'),
+  logo1: require('../assets/logo1.png'),
+  logo2: require('../assets/logo2.png'),
+  logo3: require('../assets/logo3.png'),
 };
 export type IconType = keyof typeof icon;
+
+interface IIcon {
+  home_30px: string;
+  history_30px: string;
+  store_30px: string;
+  mypage_30px: string;
+  note_30px: string;
+  bell_26px: string;
+  chur: string;
+  chur_2: string;
+  chur_5: string;
+  chur_7: string;
+  logo0: string;
+  logo1: string;
+  logo2: string;
+  logo3: string;
+}

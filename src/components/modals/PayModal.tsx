@@ -1,5 +1,14 @@
 import React, {Dispatch, Fragment, SetStateAction, useState} from 'react';
-import {View, Text, StyleSheet, Pressable, Modal, Image} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Modal,
+  Image,
+  DeviceEventEmitter,
+  Alert,
+} from 'react-native';
 import useModalStore from '../../hooks/useModalStore';
 import {SCREEN_HEIGHT, SCREEN_WIDTH} from '../../configs/device';
 import EmptyBox from '../EmptyBox';
@@ -8,17 +17,28 @@ import {useNavigation} from '@react-navigation/native';
 import {colors} from '../../styles/color';
 import useGuideStore from '../../hooks/useGuideStore';
 import usePayModalStore from '../../hooks/usePayModalStore';
+import {SERVER_URL} from '../../configs/server';
+import axios from 'axios';
+import usePopupStore from '../../hooks/usePopupStore';
 
 function PayModal() {
   const navigation = useNavigation<any>();
 
   const {visible, hideModal, data} = usePayModalStore(state => state);
-  const onPress = () => {
-    hideModal();
-  };
-  const req = async () => {
-    hideModal();
-    navigation.navigate('HomeScreen');
+  const datas = usePopupStore(state => state.data);
+  const onPress = async () => {
+    try {
+      console.log(SERVER_URL + 'subscriptions', datas.data);
+      const res = await axios.post(SERVER_URL + 'subscriptions', datas.data);
+
+      DeviceEventEmitter.emit('SubscriptionMovie');
+      DeviceEventEmitter.emit('HistoryRefresh');
+      navigation.navigate('BottomStack');
+      hideModal();
+    } catch (err) {
+      console.log(err);
+      Alert.alert('오류', '오류가 발생했네요. 잠시 후 다시 시도해보세요.');
+    }
   };
 
   if (!visible) return <></>;
@@ -36,22 +56,20 @@ function PayModal() {
               padding: 25,
             }}>
             <View style={{justifyContent: 'center', alignItems: 'center'}}>
-              <Text style={{color: 'black'}}>하이하이</Text>
+              <Text style={{color: 'black', fontSize: 20, fontWeight: '700'}}>
+                구독 완료!
+              </Text>
               <Image source={data.src} style={{width: 75, height: 90}} />
-              <View style={{alignItems: 'flex-start'}}>
-                <Text>츄르 [{data.cnt}개]를 </Text>
-                <Text>[{data.price}원]에 구입</Text>
-              </View>
             </View>
           </View>
           <Pressable
             onPress={onPress}
             style={{
-              padding: 20,
+              padding: 15,
               borderRadius: 30,
               backgroundColor: colors.Accent,
             }}>
-            <Text style={{color: colors.White, fontSize: 20}}>닫기</Text>
+            <Text style={{color: colors.White, fontSize: 16}}>확인</Text>
           </Pressable>
         </View>
       </Pressable>
@@ -70,7 +88,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.Grey,
     borderRadius: 20,
     width: '90%',
-    padding: 1,
+    padding: 40,
     alignItems: 'center',
     justifyContent: 'space-around',
   },

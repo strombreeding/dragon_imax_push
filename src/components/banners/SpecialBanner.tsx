@@ -24,6 +24,9 @@ import useModalStore from '../../hooks/useModalStore';
 import useReservationStore from '../../hooks/useReservationStore';
 import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import {RootStackParamList} from '../../types/rootStackParam';
+import {loginReq} from '../../apis/App';
+import {sleep} from '../../utils/sleep';
+import {postImgSize} from '../../styles/postImg';
 
 export type ItemData = {
   postImg: string;
@@ -39,39 +42,45 @@ function SpecialBenner() {
   const xRef = useRef(0);
   const flatRef = useRef<FlatList | null>(null);
   const navigation = useNavigation<any>();
-
+  const [ready, setReady] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const setDatas = async () => {
     try {
       const movieData = await axios.get(
         SERVER_URL + 'movies?deviceId=' + deviceId,
       );
-      // const subscriptions = await axios.get(
-      //   SERVER_URL + 'subscriptions?deviceId=' + deviceId,
-      // );
-
-      const newDatas = addFrontAndBack(movieData.data[0].info) as ItemData[];
-      flatRef.current?.scrollToOffset({
-        animated: false,
-        offset: SCREEN_WIDTH * currentIndex,
-      });
-      setDataList(newDatas);
+      console.log(movieData.data[0].info.length);
+      if (movieData.data[0].info.length >= 3) {
+        const newDatas = addFrontAndBack(movieData.data[0].info) as ItemData[];
+        setDataList(newDatas);
+        setCurrentIndex(2);
+      } else {
+        setDataList(movieData.data[0].info);
+        setCurrentIndex(0);
+      }
+      setReady(true);
     } catch (err: any) {
       console.log(err);
     }
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
     setDatas();
+    DeviceEventEmitter.emit('AppInit');
     setRefreshing(false);
   };
 
   useEffect(() => {
-    setDatas();
-  }, []);
-
-  useEffect(() => {
+    console.log('바뀐인덱스 : ', currentIndex);
+    if (dataList.length < 3) {
+      flatRef.current?.scrollToOffset({
+        animated: false,
+        offset: SCREEN_WIDTH * currentIndex,
+      });
+      return;
+    }
+    console.log('============');
     if (currentIndex <= 1) {
       flatRef.current?.scrollToOffset({
         animated: false,
@@ -85,6 +94,7 @@ function SpecialBenner() {
       });
       setCurrentIndex(2);
     }
+
     const subScriptionListner = DeviceEventEmitter.addListener(
       'SubscriptionMovie',
       data => {
@@ -93,8 +103,10 @@ function SpecialBenner() {
     );
 
     return () => subScriptionListner.remove();
-  }, [currentIndex, dataList]);
-
+  }, [currentIndex, dataList, ready]);
+  useEffect(() => {
+    setDatas();
+  }, []);
   const renderItem = useCallback(
     ({item, index}: {item: ItemData; index: number}) => {
       const renderOnPress = () => {
@@ -114,28 +126,25 @@ function SpecialBenner() {
         <Pressable
           style={[styles.renderItemBtn, {marginHorizontal}]}
           onPress={renderOnPress}>
-          <Image
-            source={{uri: item.postImg}}
-            style={{
-              width: 230,
-              height: 320,
-            }}
-          />
+          <Image source={{uri: item.postImg}} style={postImgSize.nomal} />
         </Pressable>
       );
     },
     [],
   );
-  console.log(dataList);
-  if (dataList.length < 1)
-    return (
-      <ScrollView
-        contentContainerStyle={styles.scrollView}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-        showsVerticalScrollIndicator={false}></ScrollView>
-    );
+
+  const onContentSizeChange = (contentWidth: any, contentHeight: any) => {
+    if (!ready) {
+      flatRef.current?.scrollToOffset({
+        animated: false,
+        offset: SCREEN_WIDTH * currentIndex,
+      });
+    }
+  };
+
+  if (!ready || (!ready && dataList.length === 0) || dataList.length === 0)
+    return <></>;
+
   return (
     <ScrollView
       contentContainerStyle={styles.scrollView}
@@ -144,24 +153,42 @@ function SpecialBenner() {
       }
       showsVerticalScrollIndicator={false}>
       <FlatList
+        onContentSizeChange={onContentSizeChange}
         ref={flatRef}
         horizontal
         data={dataList}
         keyExtractor={e => Math.random().toString()}
         scrollEventThrottle={16}
         pagingEnabled={true}
+        initialScrollIndex={currentIndex}
+        onScrollToIndexFailed={() => {
+          console.log('흐하핫');
+          flatRef.current?.scrollToOffset({
+            animated: false,
+            offset: SCREEN_WIDTH * currentIndex,
+          });
+        }}
         onScroll={e => {
           xRef.current = e.nativeEvent.contentOffset.x;
         }}
         onMomentumScrollEnd={e => {
           const x = Math.ceil(e.nativeEvent.contentOffset.x);
           const nextIndex = Math.ceil(x / SCREEN_WIDTH);
+          // if (dataList.length < 3) return;
+          console.log(nextIndex, '넥스트 인덱스');
           if (nextIndex <= dataList.length - 1) {
             setCurrentIndex(nextIndex);
           }
         }}
         showsHorizontalScrollIndicator={false}
         renderItem={renderItem}
+        ListEmptyComponent={() => (
+          <View>
+            <Text style={{color: colors.Accent}}>
+              상영중인 IMAX, 4DX영화가 없습니다!
+            </Text>
+          </View>
+        )}
       />
       <Indicator index={currentIndex} arr={dataList} />
       <View style={{alignItems: 'center'}}>
@@ -176,9 +203,7 @@ function SpecialBenner() {
             flexDirection: 'row',
             width: '50%',
           }}>
-          {dataList[currentIndex].subscription == null ? (
-            <></>
-          ) : (
+          {Object.keys(dataList[currentIndex]).includes('subscription') && (
             <Pressable
               onPress={() => navigation.navigate('내역')}
               style={{

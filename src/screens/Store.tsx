@@ -13,14 +13,20 @@ import {SCREEN_WIDTH} from '../configs/device';
 import EmptyBox from '../components/EmptyBox';
 import {colors} from '../styles/color';
 import useUserStateStore from '../hooks/useUserStateStore';
-import {Fragment} from 'react';
+import {Fragment, useState} from 'react';
 import usePayModalStore from '../hooks/usePayModalStore';
 import useLoadingStore from '../hooks/useLoadingStore';
+import Admob from '../components/admob/Admob';
+import useAdmobStore from '../hooks/useAdmonStore';
+import usePopupStore from '../hooks/usePopupStore';
 
 function Store() {
   const chur = useUserStateStore(state => state.chur);
   const {hideModal, showModal, setData} = usePayModalStore(state => state);
   const {hideLoading, showLoading, visible} = useLoadingStore(state => state);
+  const popupStore = usePopupStore(state => state);
+  const admobVisible = useAdmobStore(state => state.visible);
+  const show = useAdmobStore(state => state.show);
   const churImgList = [
     {src: icon.chur, cnt: 1, price: 100},
     {src: icon.chur_2, cnt: 2, price: 200},
@@ -29,8 +35,26 @@ function Store() {
   ];
   // 에미터로 메인스택 유저정보 업뎃해줭야함.
 
+  const admobPopup = () => {
+    if (admobVisible) {
+    } else {
+      popupStore.setPopupData({
+        content: '광고를 시청하고 츄르 한 개를 얻으시겠어요?',
+        leftText: '취소',
+        rightAction: () => {
+          show();
+          showLoading();
+        },
+        rightText: '시청',
+        title: '광고시청',
+      });
+      popupStore.showModal();
+    }
+  };
+
   return (
     <SafeAreaViewCustom>
+      {admobVisible && <Admob />}
       <StoreHeader />
       <EmptyBox height={30} />
       <View
@@ -56,7 +80,7 @@ function Store() {
               <Fragment key={i}>
                 <Pressable
                   onPress={() => {
-                    console.log('gd');
+                    // console.log('gd');
                     // setData(item);
                     // showModal();
                   }}
@@ -102,19 +126,18 @@ function Store() {
           })}
         </View>
 
-        <Pressable
-          style={{
-            backgroundColor: colors.Accent,
-            padding: 30,
-            borderRadius: 100,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginHorizontal: 30,
-            marginTop: 30,
-          }}>
+        <Pressable style={styles.freeChurBtn} onPress={admobPopup}>
+          <Image
+            source={icon.chur}
+            style={{width: 20, height: 35, marginBottom: -8}}
+          />
           <Text style={{color: 'white', fontSize: 25, fontWeight: '600'}}>
-            무료 츄르 뽑기!
+            무료 츄르 뽑기
           </Text>
+          <Image
+            source={icon.chur}
+            style={{width: 20, height: 35, marginBottom: -8}}
+          />
         </Pressable>
       </ScrollView>
       <EmptyBox height={50} />
@@ -130,5 +153,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  freeChurBtn: {
+    backgroundColor: colors.Accent,
+    padding: 15,
+    borderWidth: 2,
+    borderColor: colors.White,
+    borderRadius: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 30,
+    marginTop: 30,
+    flexDirection: 'row',
   },
 });

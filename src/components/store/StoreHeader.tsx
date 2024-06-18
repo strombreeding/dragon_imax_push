@@ -7,6 +7,7 @@ function StoreHeader() {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginLeft: 25,
+        padding: 10,
       }}>
       <Text style={{color: 'white', fontSize: 25, fontWeight: '900'}}>
         상점

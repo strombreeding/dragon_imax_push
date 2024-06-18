@@ -1,4 +1,8 @@
 {
   "name": "dragon_imax_push",
-  "displayName": "dragon_imax_push"
+  "displayName": "용아맥뚫었냥",
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-8533481920261273~8977159432",
+    "ios_app_id": "ca-app-pub-xxxxxxxx~xxxxxxxx"
+  }
 }
